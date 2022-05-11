@@ -1,11 +1,14 @@
+require('dotenv').config();
+
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+const mongoose = require('mongoose');
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+var indexRouter = require('./src/routes/index');
+var usersRouter = require('./src/routes/users.routes');
 
 var app = express();
 
@@ -18,6 +21,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+mongoose
+	.connect(process.env.MONGO_URL, {
+		useNewUrlParser: true,
+		useUnifiedTopology: true,
+	})
+	.then(() => console.log("Database Connected"))
+	.catch((err) => console.log(err));
+
+mongoose.Promise = global.Promise;
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
