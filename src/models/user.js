@@ -8,7 +8,6 @@ const UserSchema = new Schema({
 	email:          { type: String, lowercase: true, match: /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/, required: true },
 	password:       { type: String, required: true },
 	friend:         { type: String, default: '' },
-	logged_in:      { type: Boolean, default: false },
 	fcm_token:      { type: String, default: '' },
 	verified:       { type: Boolean, default: false },
 	verified_at:    { type: Date, default: null },

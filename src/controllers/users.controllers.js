@@ -82,6 +82,11 @@ const userLogin = (req, res, next) => {
 					message: messages.USER_EMAIL_NOT_EXIST,
 				});
 			}
+      if (!user[0].verified) {
+        return res.status(401).json({
+					message: messages.USER_NOT_VERIFIED,
+				});
+      }
 			bcrypt.compare(req.body.password, user[0].password, (err, result) => {
 				if (err) {
           console.log(err)
@@ -104,11 +109,6 @@ const userLogin = (req, res, next) => {
 						}
           );
           console.log(user[0])
-
-          if (!user[0].logged_in) {
-            user[0].logged_in = true;
-            user[0].save();
-          }
 
 					return res.status(200).json({
 						message: messages.USER_LOGIN_SUCCESS,
@@ -147,8 +147,59 @@ const getMe = async (req, res) => {
 	}
 };
 
+const userVerify = async (req, res) => {
+  if (req.user.verified) {
+    return res.status(400).json({
+			message: messages.USER_ALREADY_VERIFIED,
+		});
+  }
+
+  const userId = req.user.userId;
+	const user = await User.findById(userId);
+
+	if (user) {
+    user.verified = true;
+    user.verified_at = Date.now();
+
+    user
+      .save()
+      .then(async (result) => {
+        await result
+          .save()
+          .then(() => {
+              console.log(`User changed ${result}`)
+              res.status(200).json({
+                message: messages.USER_VERIFIED_SUCCESS,
+                userDetails: {
+                  userId: result._id,
+                  email: result.email,
+                  name: result.name,
+                },
+              })
+          })
+          .catch((err) => {
+            console.log(err)
+            res.status(400).json({
+              message: err.toString()
+            })
+          })
+      })
+      .catch((err) => {
+        console.log(err)
+        res.status(500).json({
+          message: err.toString()
+        })
+      })
+	} else {
+		res.status(400).json({
+			message: messages.BAD_REQUEST,
+		});
+	}
+}
+
 module.exports = {
   userRegister,
   userLogin,
 	getMe,
+  userVerify,
 };
