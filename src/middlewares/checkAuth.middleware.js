@@ -1,6 +1,6 @@
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
-const messages = require("../configs/messages.config");
+const messages = require("../utils/messages.util");
 
 module.exports = function (req, res, next) {
   const token = req.header("token");

@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 const mongoose = require('mongoose');
 const jwt = require("jsonwebtoken");
 const User = require("../Models/user");
-const messages = require("../configs/messages.config");
+const messages = require("../utils/messages.util");
 
 
 const userRegister = (req, res, next) => {

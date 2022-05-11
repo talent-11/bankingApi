@@ -7,6 +7,8 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const mongoose = require('mongoose');
 
+const dbUrl = require('./src/configs/db.config')
+
 var indexRouter = require('./src/routes/index');
 var usersRouter = require('./src/routes/users.route');
 
@@ -23,7 +25,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 mongoose
-	.connect(process.env.MONGO_URL, {
+	.connect(dbUrl, {
 		useNewUrlParser: true,
 		useUnifiedTopology: true,
 	})
