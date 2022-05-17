@@ -1,18 +1,17 @@
-require("dotenv").config();
 const bcrypt = require("bcryptjs");
 const mongoose = require('mongoose');
-const jwt = require("jsonwebtoken");
 const User = require("../Models/user");
 const messages = require("../utils/messages.util");
-
+const { generateToken } = require("../utils/users.utils");
+const { sendConfirmEmail } = require("../utils/email.utils");
 
 const userRegister = (req, res, next) => {
 	User.find({ email: req.body.email })
 		.exec()
 		.then((user) => {
 			if (user.length >= 1) {
-        if (!user.verified) {
-          res.status(409).json({ message: messages.USER_EMAIL_EXIST })
+        if (!user.confirmed) {
+          res.status(409).json({ message: messages.USER_NOT_CONFIRMED })
         }
         res.status(409).json({ message: messages.USER_EMAIL_EXIST })
 			} else {
@@ -37,6 +36,10 @@ const userRegister = (req, res, next) => {
                     .save()
                     .then(() => {
                         console.log(`User created ${result}`)
+
+                        const token = generateToken(result);
+                        sendConfirmEmail(result.email, token);
+
                         res.status(201).json({
                           message: messages.USER_CREATED_ACCOUNT,
                           userDetails: {
@@ -82,9 +85,9 @@ const userLogin = (req, res, next) => {
 					message: messages.USER_EMAIL_NOT_EXIST,
 				});
 			}
-      if (!user[0].verified) {
+      if (!user[0].confirmed) {
         return res.status(401).json({
-					message: messages.USER_NOT_VERIFIED,
+					message: messages.USER_NOT_CONFIRMED,
 				});
       }
 			bcrypt.compare(req.body.password, user[0].password, (err, result) => {
@@ -95,19 +98,7 @@ const userLogin = (req, res, next) => {
 					});
 				}
 				if (result) {
-					const token = jwt.sign(
-						{
-              userId: user[0]._id,
-							email: user[0].email,
-							name: user[0].name,
-              registered_at: user[0].registered_at
-							// phone_number: user[0].phone_number,
-						},
-						process.env.JWT_SECRET_KEY,
-						{
-							expiresIn: "1d",
-						}
-          );
+					const token = generateToken(user[0]);
           console.log(user[0])
 
 					return res.status(200).json({
@@ -147,10 +138,10 @@ const getMe = async (req, res) => {
 	}
 };
 
-const userVerify = async (req, res) => {
-  if (req.user.verified) {
+const userConfirm = async (req, res) => {
+  if (req.user.confirmed) {
     return res.status(400).json({
-			message: messages.USER_ALREADY_VERIFIED,
+			message: messages.USER_ALREADY_CONFIRMED,
 		});
   }
 
@@ -158,8 +149,7 @@ const userVerify = async (req, res) => {
 	const user = await User.findById(userId);
 
 	if (user) {
-    user.verified = true;
-    user.verified_at = Date.now();
+    user.confirmed = true;
 
     user
       .save()
@@ -169,7 +159,7 @@ const userVerify = async (req, res) => {
           .then(() => {
               console.log(`User changed ${result}`)
               res.status(200).json({
-                message: messages.USER_VERIFIED_SUCCESS,
+                message: messages.USER_CONFIRMED_SUCCESS,
                 userDetails: {
                   userId: result._id,
                   email: result.email,
@@ -201,5 +191,5 @@ module.exports = {
   userRegister,
   userLogin,
 	getMe,
-  userVerify,
+  userConfirm,
 };

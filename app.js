@@ -6,6 +6,7 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const mongoose = require('mongoose');
+const sgMail = require('@sendgrid/mail')
 
 const dbUrl = require('./src/configs/db.config')
 
@@ -33,6 +34,8 @@ mongoose
 	.catch((err) => console.log(err));
 
 mongoose.Promise = global.Promise;
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
